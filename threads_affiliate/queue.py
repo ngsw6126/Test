@@ -22,6 +22,7 @@ def make_entries(result: dict, product: dict, kind: str, sale: str | None = None
             "status": "draft",
             "kind": kind,
             "item_code": product.get("item_code"),
+            "product_key": product.get("item_code") or product.get("name"),
             "product_name": product.get("name"),
             "affiliate_url": product.get("affiliate_url"),
             "template": d["template"],

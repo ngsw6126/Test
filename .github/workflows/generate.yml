@@ -1,4 +1,4 @@
-name: 2. 下書き生成（毎日）
+name: 2. 下書き生成と投稿シート（毎日）
 on:
   schedule:
     - cron: "0 21 * * *"  # 毎朝 6:00 JST
@@ -24,4 +24,7 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt
       - run: python -m threads_affiliate generate
+      # 手動投稿モードのとき: 承認済みの下書きを、今日のコピペ用シートに書き出す
+      - run: |
+          if grep -qE '^\s*mode:\s*manual' settings.yaml; then python -m threads_affiliate export; fi
       - run: .github/workflows/_commit.sh "投稿の下書きを追加"

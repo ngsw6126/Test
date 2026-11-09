@@ -2,6 +2,9 @@
 
 # --- 3. ジャンル・商品選定 ---
 research:
+  # web: Claudeのネット検索で、楽天ランキング・Amazon・@cosme・LIPS・ブログなどを横断して調べる（API登録不要）
+  # rakuten_api: 楽天APIのランキングだけを使う（RAKUTEN_APP_ID が必要）
+  source: web
   # 楽天ジャンルID（例: 100939=美容・コスメ・香水, 215783=日用品雑貨, 100227=食品）
   # https://webservice.rakuten.co.jp/explorer/api/IchibaGenre/Search で確認できます
   genres:
@@ -41,6 +44,10 @@ generation:
 
 # --- 5. 運用 ---
 posting:
+  # manual: Threads APIを使わない。毎朝「投稿シート」を作るので、Threadsアプリの予約投稿に貼る
+  # auto:   Threads APIで自動投稿する（THREADS_ACCESS_TOKEN が必要）
+  mode: manual
+  manual_times: ["07:30", "12:15", "21:00", "19:30", "20:30", "22:30"]  # 投稿シートに書く目安の時刻
   daily_limit: 3             # 毎日大量に投稿しない
   sale_daily_limit: 6        # セールの前日・開始日・終了日は増やす
   require_approval: true     # 人が承認したものだけ投稿する

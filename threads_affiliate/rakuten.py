@@ -1,4 +1,4 @@
-"""楽天ウェブサービス: ランキングと料率の取得."""
+"""楽天ウェブサービス（任意）: キーがあれば、ランキングと料率を正確に取れる."""
 from __future__ import annotations
 
 import os
@@ -49,6 +49,14 @@ class RakutenClient:
         if items and items[0].get("affiliateRate") is not None:
             return float(items[0]["affiliateRate"])
         return None
+
+
+    def search(self, keyword: str = "", item_code: str = "") -> dict | None:
+        """商品コードかキーワードで検索し、いちばん上の商品を返す（料率とアフィリエイトリンクの確認用）."""
+        params = {"itemCode": item_code} if item_code else {"keyword": keyword[:100], "sort": "-reviewCount"}
+        data = self._get(SEARCH_URL, hits=1, **params)
+        items = [_unwrap(i) for i in data.get("Items", [])]
+        return items[0] if items else None
 
 
 def _unwrap(item: dict) -> dict:

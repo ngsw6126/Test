@@ -52,13 +52,16 @@ def test_step2_pass_fail_and_manual():
     assert p[0]["threads_check"] == "manual" and "threads.com/search" in p[0]["threads_search_url"]
 
 
-def test_step3_prefers_confirmed_then_rate():
-    ps = [{"threads_check": "manual", "affiliate_rate": 20, "rank": 1},
-          {"threads_check": "pass", "affiliate_rate": 10, "rank": 5},
+def test_step3_prefers_confirmed_and_lists_todo():
+    ps = [{"threads_check": "manual", "affiliate_rate": 20, "rank": 1, "affiliate_url": "u"},
+          {"threads_check": "pass", "affiliate_rate": 10, "rank": 5, "affiliate_url": "u"},
+          {"threads_check": "pass", "affiliate_rate": None, "demand_score": 5, "affiliate_url": ""},
           {"threads_check": "fail", "affiliate_rate": 30, "rank": 1}]
-    picked = research.step3_pick(ps, 5)
-    assert [p["threads_check"] for p in picked] == ["pass", "manual"]
-    assert picked[0]["active"] and not picked[1]["active"]
+    picked = research.step3_pick(ps, CFG)
+    assert [p["threads_check"] for p in picked] == ["pass", "pass", "manual"]
+    assert not picked[0]["active"] and len(picked[0]["todo"]) == 2  # 料率とリンクが未確認
+    assert picked[1]["active"] and picked[1]["todo"] == []
+    assert not picked[2]["active"]
 
 
 def test_short_query():
@@ -116,3 +119,70 @@ def test_generator_parses_structured_output():
     assert "SALE（開始日）" in calls["messages"][0]["content"]
     entries = q.make_entries(result, {"item_code": "b", "name": "クリーム", "affiliate_url": "u"}, "new")
     assert entries[0]["status"] == "draft" and entries[0]["personal_note"] == ""
+
+
+class FakeStream:
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        return False
+
+    def get_final_message(self):
+        return self.msg
+
+
+def test_web_research_resumes_pause_turn_and_builds_products(tmp_path, monkeypatch):
+    from threads_affiliate import web_research
+    monkeypatch.setattr(research, "DATA_DIR", tmp_path)
+    streams = [SimpleNamespace(stop_reason="pause_turn", content=[SimpleNamespace(type="server_tool_use")]),
+               SimpleNamespace(stop_reason="end_turn", content=[SimpleNamespace(type="text", text="レポート本文")])]
+    seen = []
+
+    def stream(**kw):
+        seen.append(kw)
+        return FakeStream(streams.pop(0))
+
+    cands = {"candidates": [
+        {"name": "Aクリーム", "search_keyword": "A ハンドクリーム",
+         "rakuten_url": "https://item.rakuten.co.jp/shopx/item-1/", "price": "1980円",
+         "why_selling": "口コミで保湿力", "target_worries": ["乾燥"], "media_count": 3, "demand_score": 5,
+         "sources": [{"media": "@cosme", "url": "https://example.com", "note": "1位"}]},
+        {"name": "B", "search_keyword": "B", "rakuten_url": "https://amzn.to/x", "price": "",
+         "why_selling": "", "target_worries": [], "media_count": 1, "demand_score": 2, "sources": []}]}
+
+    def create(**kw):
+        assert "レポート本文" in kw["messages"][0]["content"]
+        return SimpleNamespace(stop_reason="end_turn",
+                               content=[SimpleNamespace(type="text", text=json.dumps(cands))])
+
+    client = SimpleNamespace(beta=SimpleNamespace(messages=SimpleNamespace(stream=stream, create=create)))
+    r = web_research.WebResearcher("claude-opus-5-5", client=client)
+    products = research.step1_web(r, [{"id": 100939, "name": "コスメ"}], "30代の母親", affiliate_id="AFF")
+    assert len(seen) == 2 and seen[1]["messages"][1]["role"] == "assistant"
+    assert "ranking.rakuten.co.jp/daily/100939" in seen[0]["messages"][0]["content"]
+    assert {t["type"] for t in seen[0]["tools"]} == {"web_search_20260209", "web_fetch_20260209"}
+    a, b = products
+    assert a["item_code"] == "shopx:item-1"
+    assert a["affiliate_url"].startswith("https://hb.afl.rakuten.co.jp/hgc/AFF/?pc=https%3A%2F%2Fitem.rakuten")
+    assert b["rakuten_url"] == "" and b["affiliate_url"] == ""  # 楽天以外のURLは使わない
+    assert (tmp_path / "research").exists()
+
+
+def test_export_sheet_appends_and_respects_limit(tmp_path, monkeypatch):
+    from threads_affiliate import cli, store
+    monkeypatch.setattr(store, "QUEUE", tmp_path / "q.yaml")
+    monkeypatch.setattr(store, "POSTED", tmp_path / "p.yaml")
+    monkeypatch.setattr(cli, "DATA_DIR", tmp_path)
+    store.save(store.QUEUE, [dict(entry(), id=str(i), kind="new", item_code="b", product_name="P",
+                                  template="型", created_at=f"2026-11-0{i}") for i in range(1, 6)])
+    s = {"posting": dict(POSTING, daily_limit=3, sale_daily_limit=6, timezone="Asia/Tokyo"), "sales": []}
+    cli.cmd_export(s, None)
+    cli.cmd_export(s, None)  # 2回目は上限に達しているので何もしない
+    sheet = next((tmp_path / "投稿シート").glob("*.md")).read_text(encoding="utf-8")
+    assert sheet.count("### 本文") == 3 and "【PR】紹介した商品はこちら" in sheet
+    statuses = [e["status"] for e in store.load(store.QUEUE, [])]
+    assert statuses.count("exported") == 3

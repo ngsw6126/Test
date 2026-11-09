@@ -88,7 +88,12 @@ class Generator:
 - 商品名: {product['name']}
 - 価格: {product.get('price')}円 / ショップ: {product.get('shop')}
 - レビュー: {product.get('review_average')}（{product.get('review_count')}件）
-- 商品説明（抜粋）: {product.get('caption')}
+- 商品説明（抜粋）: {product.get('caption') or '不明'}
+
+# ネットのリサーチで分かったこと（出典つき）
+- 売れている理由: {product.get('why_selling') or '不明'}
+- 買っている人の悩み: {', '.join(product.get('target_worries') or []) or '不明'}
+- 出典: {json.dumps(product.get('sources') or [], ensure_ascii=False)}
 
 # 分析してほしいこと
 - この商品はどんな悩みの人に向いているか
