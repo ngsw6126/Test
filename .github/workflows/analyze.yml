@@ -1,0 +1,28 @@
+name: 4. 分析（毎日）
+on:
+  schedule:
+    - cron: "0 15 * * *"  # 毎晩 0:00 JST
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: data-update
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
+      RAKUTEN_AFFILIATE_ID: ${{ secrets.RAKUTEN_AFFILIATE_ID }}
+      RAKUTEN_ACCESS_KEY: ${{ secrets.RAKUTEN_ACCESS_KEY }}
+      THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+      THREADS_USER_ID: ${{ secrets.THREADS_USER_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python -m threads_affiliate analyze
+      - run: python -m threads_affiliate calendar
+      - run: .github/workflows/_commit.sh "投稿の成績を更新"
