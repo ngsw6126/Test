@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 
 from threads_affiliate import queue as q
 from threads_affiliate import research, sales
-from threads_affiliate.generator import Generator
+from threads_affiliate import drafting
 
 JST = ZoneInfo("Asia/Tokyo")
 CFG = {"genres": [{"id": 1, "name": "コスメ"}], "ranking_top_n": 30, "min_affiliate_rate": 10.0,
@@ -14,30 +14,12 @@ POSTING = {"pr_label": "【PR】", "link_in_reply": True, "require_approval": Tr
            "require_personal_note": True}
 
 
-class FakeRakuten:
-    def ranking(self, genre_id, top_n):
-        return [
-            {"itemCode": "a", "itemName": "【送料無料】うるおいクリーム 50g", "rank": 1, "affiliateRate": 4},
-            {"itemCode": "b", "itemName": "高保湿 ハンドクリーム 3本セット", "rank": 2, "affiliateRate": 12},
-            {"itemCode": "c", "itemName": "ボディミルク", "rank": 3},  # 料率なし → 検索APIで補う
-        ]
-
-    def affiliate_rate(self, code):
-        return 10.0
-
-
 class FakeThreads:
     def __init__(self, likes):
         self.likes = likes
 
     def keyword_search(self, query):
         return [{"text": "x", "like_count": v, "permalink": "p"} for v in self.likes]
-
-
-def test_step1_filters_by_rate_and_fills_missing_rate():
-    products = research.step1_ranking(FakeRakuten(), CFG)
-    assert [p["item_code"] for p in products] == ["b", "c"]
-    assert products[1]["affiliate_rate"] == 10.0
 
 
 def test_step2_pass_fail_and_manual():
@@ -59,9 +41,13 @@ def test_step3_prefers_confirmed_and_lists_todo():
           {"threads_check": "fail", "affiliate_rate": 30, "rank": 1}]
     picked = research.step3_pick(ps, CFG)
     assert [p["threads_check"] for p in picked] == ["pass", "pass", "manual"]
-    assert not picked[0]["active"] and len(picked[0]["todo"]) == 2  # 料率とリンクが未確認
-    assert picked[1]["active"] and picked[1]["todo"] == []
-    assert not picked[2]["active"]
+    assert len(picked[0]["todo"]) == 2  # 料率とリンクが未確認
+    assert picked[1]["todo"] == [] and research.is_ready(picked[1], CFG)
+    assert not research.is_ready(picked[2], CFG)
+    picked[2]["threads_check"] = "confirmed"  # 人が確認したら、その場で使えるようになる
+    assert research.is_ready(picked[2], CFG)
+    picked[2]["skip"] = True
+    assert not research.is_ready(picked[2], CFG)
 
 
 def test_short_query():
@@ -101,77 +87,6 @@ def test_sale_key_days_handle_midnight_end():
     assert ics.count("BEGIN:VEVENT") == 3 and "DTSTART;VALUE=DATE:20261203" in ics
 
 
-def test_generator_parses_structured_output():
-    payload = {"analysis": {"target_worries": ["乾燥"], "why_persona_chooses": "時短", "cautions": ""},
-               "drafts": [{"template": "生々しい一言", "text": "t\n{体験}", "personal_note_hint": "h"}]}
-    calls = {}
-
-    def create(**kw):
-        calls.update(kw)
-        return SimpleNamespace(stop_reason="end_turn",
-                               content=[SimpleNamespace(type="text", text=json.dumps(payload))])
-
-    client = SimpleNamespace(beta=SimpleNamespace(messages=SimpleNamespace(create=create)))
-    gen = Generator("claude-opus-5-5", client=client)
-    result = gen.new_posts({"name": "クリーム"}, "30代の母親", [{"name": "型"}], 3, sale="SALE（開始日）")
-    assert result == payload
-    assert calls["output_config"]["format"]["type"] == "json_schema"
-    assert "SALE（開始日）" in calls["messages"][0]["content"]
-    entries = q.make_entries(result, {"item_code": "b", "name": "クリーム", "affiliate_url": "u"}, "new")
-    assert entries[0]["status"] == "draft" and entries[0]["personal_note"] == ""
-
-
-class FakeStream:
-    def __init__(self, msg):
-        self.msg = msg
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *a):
-        return False
-
-    def get_final_message(self):
-        return self.msg
-
-
-def test_web_research_resumes_pause_turn_and_builds_products(tmp_path, monkeypatch):
-    from threads_affiliate import web_research
-    monkeypatch.setattr(research, "DATA_DIR", tmp_path)
-    streams = [SimpleNamespace(stop_reason="pause_turn", content=[SimpleNamespace(type="server_tool_use")]),
-               SimpleNamespace(stop_reason="end_turn", content=[SimpleNamespace(type="text", text="レポート本文")])]
-    seen = []
-
-    def stream(**kw):
-        seen.append(kw)
-        return FakeStream(streams.pop(0))
-
-    cands = {"candidates": [
-        {"name": "Aクリーム", "search_keyword": "A ハンドクリーム",
-         "rakuten_url": "https://item.rakuten.co.jp/shopx/item-1/", "price": "1980円",
-         "why_selling": "口コミで保湿力", "target_worries": ["乾燥"], "media_count": 3, "demand_score": 5,
-         "sources": [{"media": "@cosme", "url": "https://example.com", "note": "1位"}]},
-        {"name": "B", "search_keyword": "B", "rakuten_url": "https://amzn.to/x", "price": "",
-         "why_selling": "", "target_worries": [], "media_count": 1, "demand_score": 2, "sources": []}]}
-
-    def create(**kw):
-        assert "レポート本文" in kw["messages"][0]["content"]
-        return SimpleNamespace(stop_reason="end_turn",
-                               content=[SimpleNamespace(type="text", text=json.dumps(cands))])
-
-    client = SimpleNamespace(beta=SimpleNamespace(messages=SimpleNamespace(stream=stream, create=create)))
-    r = web_research.WebResearcher("claude-opus-5-5", client=client)
-    products = research.step1_web(r, [{"id": 100939, "name": "コスメ"}], "30代の母親", affiliate_id="AFF")
-    assert len(seen) == 2 and seen[1]["messages"][1]["role"] == "assistant"
-    assert "ranking.rakuten.co.jp/daily/100939" in seen[0]["messages"][0]["content"]
-    assert {t["type"] for t in seen[0]["tools"]} == {"web_search_20260209", "web_fetch_20260209"}
-    a, b = products
-    assert a["item_code"] == "shopx:item-1"
-    assert a["affiliate_url"].startswith("https://hb.afl.rakuten.co.jp/hgc/AFF/?pc=https%3A%2F%2Fitem.rakuten")
-    assert b["rakuten_url"] == "" and b["affiliate_url"] == ""  # 楽天以外のURLは使わない
-    assert (tmp_path / "research").exists()
-
-
 def test_export_sheet_appends_and_respects_limit(tmp_path, monkeypatch):
     from threads_affiliate import cli, store
     monkeypatch.setattr(store, "QUEUE", tmp_path / "q.yaml")
@@ -186,3 +101,75 @@ def test_export_sheet_appends_and_respects_limit(tmp_path, monkeypatch):
     assert sheet.count("### 本文") == 3 and "【PR】紹介した商品はこちら" in sheet
     statuses = [e["status"] for e in store.load(store.QUEUE, [])]
     assert statuses.count("exported") == 3
+
+
+def candidate(**kw):
+    c = {"name": "Aクリーム", "search_keyword": "A ハンドクリーム",
+         "rakuten_url": "https://item.rakuten.co.jp/shopx/item-1/", "price": "1980円",
+         "why_selling": "口コミで保湿力", "target_worries": ["乾燥"], "media_count": 3, "demand_score": 5,
+         "sources": [{"media": "@cosme", "url": "https://example.com", "note": "1位"}]}
+    c.update(kw)
+    return c
+
+
+def test_validate_candidates():
+    assert research.validate_candidates({"candidates": [candidate()]}) == []
+    errs = research.validate_candidates({"candidates": [
+        candidate(sources=[]), candidate(rakuten_url="https://amzn.to/x"), candidate(demand_score=9)]})
+    assert len(errs) == 3
+
+
+def test_import_candidates_builds_links_and_keeps_previous_checks():
+    data = {"genre": "コスメ", "candidates": [candidate(), candidate(name="B", rakuten_url="", demand_score=2)]}
+    previous = [{"item_code": "shopx:item-1", "name": "Aクリーム", "affiliate_rate": 12,
+                 "threads_check": "confirmed"}]
+    picked = research.import_candidates(data, CFG, affiliate_id="AFF", previous=previous)
+    a, b = picked
+    assert a["item_code"] == "shopx:item-1"
+    assert a["affiliate_url"].startswith("https://hb.afl.rakuten.co.jp/hgc/AFF/?pc=https%3A%2F%2Fitem.rakuten")
+    assert a["todo"] == [] and research.is_ready(a, CFG)  # 前回の確認を引き継ぐ
+    assert b["affiliate_url"] == "" and len(b["todo"]) == 3
+
+
+def draft(**kw):
+    d = {"kind": "new", "item_code": "shopx:item-1", "product_name": "Aクリーム", "source_post_id": None,
+         "template": "生々しい一言", "text": "冬の手が痛い\n{体験}\nこれに変えた", "personal_note_hint": "h",
+         "sale": None}
+    d.update(kw)
+    return d
+
+
+def test_validate_draft_rules():
+    assert drafting.validate_draft(draft()) == []
+    assert drafting.validate_draft(draft(text="体験なし"))
+    assert drafting.validate_draft(draft(text="{体験}\nhttps://x.com"))
+    assert drafting.validate_draft(draft(text="{体験}\n必ず治る"))
+    assert drafting.validate_draft(draft(text="【PR】{体験}"))
+    assert drafting.validate_draft(draft(text="{体験}" + "あ" * 480))
+
+
+def test_plan_and_import_drafts():
+    settings = {"persona": "30代の母親", "sales": [], "research": CFG,
+                "generation": {"drafts_per_product": 3, "templates": [{"name": "型"}]},
+                "reuse": {"min_views": 3000, "variants_per_hit": 2, "cooldown_days": 14}}
+    products = [{"item_code": "shopx:item-1", "name": "Aクリーム", "affiliate_url": "u", "affiliate_rate": 12,
+                 "threads_check": "confirmed"},
+                {"item_code": "shopy:z", "name": "Z", "affiliate_url": "", "threads_check": "manual"}]
+    posted = [{"post_id": "p1", "product_name": "Aクリーム", "item_code": "shopx:item-1", "affiliate_url": "u",
+               "text": "当たり", "views": 5000}]
+    today = dt.date(2026, 11, 11)
+    pl = drafting.plan(settings, products, [], posted, today, JST)
+    assert [p["name"] for p in pl["new_products"]] == ["Aクリーム"]
+    assert pl["reuse_hits"][0]["source_post_id"] == "p1"
+
+    queue = []
+    bad = {"drafts": [draft(), draft(item_code="none", product_name="none")]}
+    added, errors = drafting.import_drafts(bad, products, queue, posted, "【PR】", today)
+    assert errors and queue == []  # 1本でも問題があれば何も追加しない
+
+    good = {"drafts": [draft(), draft(kind="reuse", source_post_id="p1", template="擦り: 冒頭")]}
+    added, errors = drafting.import_drafts(good, products, queue, posted, "【PR】", today)
+    assert errors == [] and len(queue) == 2 and queue[0]["affiliate_url"] == "u"
+    assert posted[0]["last_reused_at"] == "2026-11-11"
+    pl = drafting.plan(settings, products, queue, posted, today, JST)
+    assert pl["new_products"] == [] and pl["reuse_hits"] == []  # 書いた分は次回の対象から外れる

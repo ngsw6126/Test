@@ -1,16 +1,20 @@
 # ===== Threadsアフィリエイト自動化 設定 =====
 
-# --- 3. ジャンル・商品選定 ---
+# --- 楽天アフィリエイト ---
+rakuten:
+  # 楽天アフィリエイトID（リンクに含まれて公開される情報なので、ここに書いて大丈夫です）
+  # 楽天アフィリエイトの管理画面などで確認できます。空のままだと、リンクを自分で貼る必要があります
+  affiliate_id: ""
+
+# --- 3. ジャンル・商品選定（Claude Codeが prompts/research.md に従って調べる）---
 research:
-  # web: Claudeのネット検索で、楽天ランキング・Amazon・@cosme・LIPS・ブログなどを横断して調べる（API登録不要）
-  # rakuten_api: 楽天APIのランキングだけを使う（RAKUTEN_APP_ID が必要）
-  source: web
   # 楽天ジャンルID（例: 100939=美容・コスメ・香水, 215783=日用品雑貨, 100227=食品）
   # https://webservice.rakuten.co.jp/explorer/api/IchibaGenre/Search で確認できます
   genres:
     - id: 100939
       name: 美容・コスメ・香水
   ranking_top_n: 30          # ランキング1〜30位をチェック
+  candidates_per_genre: 15   # ネットで集める候補の数
   min_affiliate_rate: 10.0   # 料率10%以上
   threads_min_likes: 100     # 「いいね100以上」の投稿が
   threads_min_hit_posts: 10  # 10個以上あるか
@@ -19,9 +23,8 @@ research:
 # --- 読者像（AIへの質問の前提）---
 persona: 30代の母親。忙しくて自分のケアは後回しになりがち。
 
-# --- 4. 投稿生成 ---
+# --- 4. 投稿生成（Claude Codeが prompts/generate.md に従って書く）---
 generation:
-  model: claude-opus-5-5
   drafts_per_product: 3      # 「この型で3つ作って」
   # Threadsで伸びている投稿の「型」。伸びている投稿を見つけたら、ここに追加する
   templates:

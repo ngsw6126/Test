@@ -1,20 +1,27 @@
-"""コマンドライン入口.
+"""コマンドライン入口（Claude APIのキーは使わない）.
 
-  python -m threads_affiliate research   # 3. 商品選定（ランキング→Threads確認→5商品）
-  python -m threads_affiliate generate   # 4. 下書き生成（新規＋当たり投稿の擦り）
-  python -m threads_affiliate export     # 5. 承認済みを、コピペ用の投稿シートに書き出す（API不要）
-  python -m threads_affiliate post       # 5. 承認済みをThreads APIで自動投稿（任意）
-  python -m threads_affiliate analyze    # 閲覧数などを取得し、当たり投稿を判定
+Claude Codeのスケジュールタスクが使うもの:
+  python -m threads_affiliate import-products <候補.json>  # 3. 調べた候補を検証して5商品を選ぶ
+  python -m threads_affiliate plan-drafts                  # 4. 今日書く下書きの材料を出す
+  python -m threads_affiliate import-drafts <下書き.json>  # 4. 書いた下書きを検証してキューに追加する
+  python -m threads_affiliate export                       # 5. 承認済みを、コピペ用の投稿シートに書き出す
+
+あなたが使うもの:
+  python -m threads_affiliate status     # 商品の確認事項と、キューの状況を表示
   python -m threads_affiliate calendar   # セールカレンダー(.ics)を書き出す
-  python -m threads_affiliate status     # キューの状況を表示
+
+任意（Threads APIを使う場合）:
+  python -m threads_affiliate post       # 承認済みをThreads APIで自動投稿
+  python -m threads_affiliate analyze    # 閲覧数などを取得し、当たり投稿を判定
 """
 from __future__ import annotations
 
 import argparse
 import datetime as dt
+import json
 
+from . import drafting, research, sales, store
 from . import queue as q
-from . import research, sales, store
 from .config import DATA_DIR, env, load_dotenv, load_settings, tz
 
 
@@ -36,73 +43,63 @@ def _rakuten():
                          env("RAKUTEN_ACCESS_KEY", required=False))
 
 
-def cmd_research(s: dict, args) -> None:
+def _affiliate_id(s: dict) -> str:
+    # アフィリエイトIDは、リンクに含まれて公開される情報なので settings.yaml に書いてよい
+    return str(s.get("rakuten", {}).get("affiliate_id") or "") or env("RAKUTEN_AFFILIATE_ID", required=False)
+
+
+def _read_json(path: str) -> dict:
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def cmd_import_products(s: dict, args) -> None:
     cfg = s["research"]
-    rakuten = _rakuten()
-    researcher = None
-    if cfg.get("source", "web") == "web":
-        from .web_research import WebResearcher
-        researcher = WebResearcher(s["generation"]["model"])
-    elif rakuten is None:
-        raise SystemExit("research.source が rakuten_api のときは RAKUTEN_APP_ID が必要です")
-    picked = research.run(cfg, s["persona"], researcher=researcher, rakuten=rakuten,
-                          threads=_threads(required=False),
-                          affiliate_id=env("RAKUTEN_AFFILIATE_ID", required=False))
+    data = _read_json(args.file)
+    errors = research.validate_candidates(data)
+    if errors:
+        print("候補のデータに問題があります。直してからもう一度実行してください:")
+        print("\n".join(f"- {e}" for e in errors))
+        raise SystemExit(1)
+    picked = research.import_candidates(
+        data, cfg, affiliate_id=_affiliate_id(s), rakuten=_rakuten(),
+        threads=_threads(required=False), previous=store.load(store.PRODUCTS, []))
     store.save(store.PRODUCTS, picked)
-    print(f"{len(picked)}商品を data/products.yaml に保存しました（調査レポートは data/research/）")
-    for p in picked:
-        rate = f"料率{p['affiliate_rate']:g}%" if p.get("affiliate_rate") is not None else "料率未確認"
-        print(f"- {'✅' if p['active'] else '👀'} {rate} 需要{p.get('demand_score') or '-'} {p['name'][:40]}")
-        for t in p["todo"]:
-            print(f"    □ {t}")
-    if any(not p["active"] for p in picked):
-        print("確認が終わった商品は、data/products.yaml で active: true にしてください")
+    print(f"{len(picked)}商品を data/products.yaml に保存しました")
+    _print_products(s, picked)
 
 
-def cmd_generate(s: dict, args) -> None:
-    from .generator import Generator
-    gen = Generator(s["generation"]["model"])
+def _print_products(s: dict, products: list[dict]) -> None:
+    cfg = s["research"]
+    for p in products:
+        rate = f"料率{float(p['affiliate_rate']):g}%" if p.get("affiliate_rate") is not None else "料率未確認"
+        mark = "⏸" if p.get("skip") else ("✅" if research.is_ready(p, cfg) else "👀")
+        print(f"- {mark} {rate} 需要{p.get('demand_score') or '-'} {p['name'][:40]}")
+        if not p.get("skip"):
+            for t in research.todo_for(p, cfg):
+                print(f"    □ {t}")
+
+
+def cmd_plan_drafts(s: dict, args) -> None:
+    zone = tz(s)
+    data = drafting.plan(s, store.load(store.PRODUCTS, []), store.load(store.QUEUE, []),
+                         store.load(store.POSTED, []), dt.datetime.now(zone).date(), zone, args.force)
+    print(json.dumps(data, ensure_ascii=False, indent=2))
+
+
+def cmd_import_drafts(s: dict, args) -> None:
     queue = store.load(store.QUEUE, [])
-    today = dt.datetime.now(tz(s)).date()
-    sale = sales.today_sale(s.get("sales"), today, tz(s))
-    if not sale:  # 前日に生成しておけるよう、明日がセール重要日かも見る
-        sale = sales.today_sale(s.get("sales"), today + dt.timedelta(days=1), tz(s))
-    pending_codes = {e.get("product_key") or e["item_code"] for e in queue
-                     if e["status"] in ("draft", "approved")}
-    added = 0
-
-    for p in store.load(store.PRODUCTS, []):
-        if not p.get("active") or ((p.get("item_code") or p["name"]) in pending_codes and not args.force):
-            continue
-        if not p.get("affiliate_url"):
-            print(f"affiliate_url が空なのでスキップ: {p['name'][:30]}")
-            continue
-        result = gen.new_posts(p, s["persona"], s["generation"]["templates"],
-                               s["generation"]["drafts_per_product"], sale)
-        queue += q.make_entries(result, p, "new", sale)
-        added += len(result["drafts"])
-
-    # 当たり投稿を擦る
-    r = s.get("reuse", {})
     posted = store.load(store.POSTED, [])
-    cutoff = (today - dt.timedelta(days=r.get("cooldown_days", 14))).isoformat()
-    for hit in posted:
-        if (hit.get("views") or 0) < r.get("min_views", 3000):
-            continue
-        if (hit.get("last_reused_at") or "") > cutoff:
-            continue
-        product = {"item_code": hit.get("item_code"), "name": hit.get("product_name"),
-                   "affiliate_url": hit.get("affiliate_url")}
-        result = gen.reuse_posts(hit, r.get("variants_per_hit", 2))
-        queue += q.make_entries(result, product, "reuse", sale, hit["post_id"])
-        product["item_code"] = product["item_code"] or hit.get("product_name")
-        hit["last_reused_at"] = today.isoformat()
-        added += len(result["drafts"])
-
+    added, errors = drafting.import_drafts(
+        _read_json(args.file), store.load(store.PRODUCTS, []), queue, posted,
+        s["posting"].get("pr_label", "【PR】"), dt.datetime.now(tz(s)).date())
+    if errors:
+        print("下書きがルールに合いません。直してからもう一度実行してください（何も追加していません）:")
+        print("\n".join(f"- {e}" for e in errors))
+        raise SystemExit(1)
     store.save(store.QUEUE, queue)
     store.save(store.POSTED, posted)
-    print(f"下書きを{added}本追加しました（data/queue.yaml）。"
-          "status を approved にし、personal_note に体験の一言を書くと投稿されます")
+    print(f"下書きを{len(added)}本 data/queue.yaml に追加しました")
 
 
 def cmd_post(s: dict, args) -> None:
@@ -266,9 +263,11 @@ def cmd_calendar(s: dict, args) -> None:
 
 
 def cmd_status(s: dict, args) -> None:
-    queue = store.load(store.QUEUE, [])
-    for e in queue:
-        if e["status"] == "posted":
+    print("## 商品（👀 = あなたの確認待ち）")
+    _print_products(s, store.load(store.PRODUCTS, []))
+    print("\n## 下書き")
+    for e in store.load(store.QUEUE, []):
+        if e["status"] in ("posted", "exported"):
             continue
         ok, why = q.ready(e, s["posting"])
         print(f"{e['id']} [{e['status']}] {'投稿可' if ok else why} / {e['template']} / {e['product_name'][:25]}")
@@ -278,9 +277,12 @@ def main(argv=None) -> None:
     load_dotenv()
     parser = argparse.ArgumentParser(prog="threads_affiliate")
     sub = parser.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("research")
-    g = sub.add_parser("generate")
-    g.add_argument("--force", action="store_true", help="未投稿の下書きがあっても生成する")
+    ip = sub.add_parser("import-products")
+    ip.add_argument("file")
+    pd = sub.add_parser("plan-drafts")
+    pd.add_argument("--force", action="store_true", help="未投稿の下書きがある商品も含める")
+    idr = sub.add_parser("import-drafts")
+    idr.add_argument("file")
     p = sub.add_parser("post")
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--max", type=int, default=1, help="1回の実行で投稿する最大数")
@@ -292,4 +294,4 @@ def main(argv=None) -> None:
     sub.add_parser("status")
     args = parser.parse_args(argv)
     s = load_settings()
-    globals()[f"cmd_{args.cmd}"](s, args)
+    globals()[f"cmd_{args.cmd.replace('-', '_')}"](s, args)

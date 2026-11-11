@@ -1,7 +1,8 @@
 """ノウハウ3: ジャンル・商品選定の3ステップ.
 
 1. 売れている商品を集める
-   - 標準: Claudeのネット検索で、楽天ランキング・Amazon・@cosme・LIPS・ブログなどを横断して調べる（APIの登録は不要）
+   - 標準: Claude Codeのスケジュールタスクが prompts/research.md に従い、ネット検索で
+     楽天ランキング・Amazon・@cosme・LIPS・ブログなどを横断して調べ、候補をJSONで渡す（APIキー不要）
    - 任意: 楽天APIのキーがあれば、料率（10%以上か）とアフィリエイトリンクを自動で確認する
 2. Threadsで「いいね100以上」の投稿が10個以上あるか
    - 標準: 検索URLを出すので、人が開いて確認する
@@ -12,10 +13,9 @@ from __future__ import annotations
 
 import datetime as dt
 import re
+import urllib.parse
 
-from .config import DATA_DIR
 from .threads_api import search_url
-from .web_research import affiliate_link
 
 RAKUTEN_ITEM_RE = re.compile(r"^https?://item\.rakuten\.co\.jp/[^/]+/[^/]+")
 
@@ -30,36 +30,65 @@ def short_query(name: str) -> str:
 
 # ---------- 手順1: 売れている商品を集める ----------
 
-def step1_web(researcher, genres: list[dict], persona: str, affiliate_id: str = "",
-              save_reports: bool = True) -> list[dict]:
+CANDIDATE_FIELDS = ["name", "search_keyword", "rakuten_url", "price", "why_selling",
+                    "target_worries", "media_count", "demand_score", "sources"]
+
+
+def ranking_url(genre_id) -> str:
+    return f"https://ranking.rakuten.co.jp/daily/{genre_id}/"
+
+
+def affiliate_link(item_url: str, affiliate_id: str) -> str:
+    """楽天の商品URLとアフィリエイトIDから、アフィリエイトリンクを作る（APIは使わない）."""
+    q = urllib.parse.quote(item_url, safe="")
+    return f"https://hb.afl.rakuten.co.jp/hgc/{affiliate_id}/?pc={q}&m={q}"
+
+
+def validate_candidates(data: dict) -> list[str]:
+    errors = []
+    cands = data.get("candidates")
+    if not isinstance(cands, list) or not cands:
+        return ["candidates が空です"]
+    for i, c in enumerate(cands):
+        missing = [f for f in CANDIDATE_FIELDS if f not in c]
+        if missing:
+            errors.append(f"candidates[{i}]: 項目が足りません: {', '.join(missing)}")
+            continue
+        if not str(c["name"]).strip():
+            errors.append(f"candidates[{i}]: name が空です")
+        if not isinstance(c["sources"], list) or not c["sources"]:
+            errors.append(f"candidates[{i}]: sources（出典）が1つもありません")
+        elif any(not str(x.get("url", "")).startswith("http") for x in c["sources"]):
+            errors.append(f"candidates[{i}]: sources の url が不正です")
+        if c["rakuten_url"] and not RAKUTEN_ITEM_RE.match(c["rakuten_url"]):
+            errors.append(f"candidates[{i}]: rakuten_url は item.rakuten.co.jp の商品ページにしてください")
+        if not isinstance(c["demand_score"], int) or not 1 <= c["demand_score"] <= 5:
+            errors.append(f"candidates[{i}]: demand_score は1〜5の整数です")
+    return errors
+
+
+def products_from_candidates(candidates: list[dict], genre_name: str, affiliate_id: str = "") -> list[dict]:
     products = []
-    today = dt.date.today().isoformat()
-    for genre in genres:
-        report, candidates = researcher.research(genre, persona)
-        if save_reports:
-            path = DATA_DIR / "research" / f"{today}_{genre['id']}.md"
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(f"# {genre['name']} リサーチ（{today}）\n\n{report}\n", encoding="utf-8")
-        for c in candidates:
-            url = c.get("rakuten_url") or ""
-            if not RAKUTEN_ITEM_RE.match(url):
-                url = ""  # 楽天の商品ページ以外は使わない
-            products.append({
-                # 楽天の商品コードは「ショップ:商品」の形
-                "item_code": ":".join(url.split("item.rakuten.co.jp/")[1].split("/")[:2]) if url else None,
-                "name": c["name"],
-                "genre": genre["name"],
-                "price": c.get("price"),
-                "rakuten_url": url,
-                "affiliate_url": affiliate_link(url, affiliate_id) if url and affiliate_id else "",
-                "affiliate_rate": None,
-                "threads_query": c.get("search_keyword") or short_query(c["name"]),
-                "why_selling": c.get("why_selling"),
-                "target_worries": c.get("target_worries"),
-                "media_count": c.get("media_count"),
-                "demand_score": c.get("demand_score"),
-                "sources": c.get("sources"),
-            })
+    for c in candidates:
+        url = c.get("rakuten_url") or ""
+        if not RAKUTEN_ITEM_RE.match(url):
+            url = ""  # 楽天の商品ページ以外は使わない
+        products.append({
+            # 楽天の商品コードは「ショップ:商品」の形
+            "item_code": ":".join(url.split("item.rakuten.co.jp/")[1].split("/")[:2]) if url else None,
+            "name": c["name"],
+            "genre": genre_name,
+            "price": c.get("price"),
+            "rakuten_url": url,
+            "affiliate_url": affiliate_link(url, affiliate_id) if url and affiliate_id else "",
+            "affiliate_rate": None,
+            "threads_query": c.get("search_keyword") or short_query(c["name"]),
+            "why_selling": c.get("why_selling"),
+            "target_worries": c.get("target_worries"),
+            "media_count": c.get("media_count"),
+            "demand_score": c.get("demand_score"),
+            "sources": c.get("sources"),
+        })
     return products
 
 
@@ -81,23 +110,6 @@ def enrich_with_rakuten(rakuten, products: list[dict], min_rate: float) -> list[
             continue
         kept.append(p)
     return kept
-
-
-def step1_ranking(rakuten, cfg: dict) -> list[dict]:
-    """（楽天APIを使う場合の旧方式）ランキング1〜30位から料率10%以上を抽出する."""
-    from .rakuten import to_product
-    candidates = []
-    for genre in cfg["genres"]:
-        for item in rakuten.ranking(genre["id"], cfg["ranking_top_n"]):
-            rate = item.get("affiliateRate")
-            if rate is None and item.get("itemCode"):
-                rate = rakuten.affiliate_rate(item["itemCode"])
-            if rate is None or float(rate) < cfg["min_affiliate_rate"]:
-                continue
-            p = to_product(item, genre["name"], float(rate))
-            p["threads_query"] = short_query(p["name"])
-            candidates.append(p)
-    return candidates
 
 
 # ---------- 手順2: Threadsで需要を確認する ----------
@@ -132,10 +144,14 @@ def step2_threads_check(threads, products: list[dict], cfg: dict) -> None:
 def todo_for(p: dict, cfg: dict) -> list[str]:
     """投稿を始める前に、人が確認すべきこと."""
     todo = []
-    if p.get("threads_check") != "pass":
+    if p.get("threads_check") not in ("pass", "confirmed"):
         todo.append(f"Threadsで検索し、いいね{cfg['threads_min_likes']}以上の投稿が"
-                    f"{cfg['threads_min_hit_posts']}個以上あるか確認する → {p.get('threads_search_url')}")
-    if p.get("affiliate_rate") is None:
+                    f"{cfg['threads_min_hit_posts']}個以上あれば threads_check を confirmed にする"
+                    f"（なければ skip: true）→ {p.get('threads_search_url')}")
+    rate = p.get("affiliate_rate")
+    if rate is not None and float(rate) < cfg["min_affiliate_rate"]:
+        todo.append(f"料率が{cfg['min_affiliate_rate']:g}%未満です。skip: true にしてください")
+    if rate is None:
         todo.append(f"楽天アフィリエイトでリンクを作るときに、料率が{cfg['min_affiliate_rate']:g}%以上か確認し、"
                     "affiliate_rate に書く")
     if not p.get("affiliate_url"):
@@ -152,19 +168,41 @@ def step3_pick(products: list[dict], cfg: dict) -> list[dict]:
     today = dt.date.today().isoformat()
     for p in picked:
         p["selected_at"] = today
+        # 確認が残っている商品は、todo が空になるまで下書きを作らない
         p["todo"] = todo_for(p, cfg)
-        # 確認が残っている商品は、人が確認して active: true にするまで投稿を作らない
-        p["active"] = not p["todo"]
     return picked
 
 
-def run(cfg: dict, persona: str, researcher=None, rakuten=None, threads=None,
-        affiliate_id: str = "") -> list[dict]:
-    if cfg.get("source", "web") == "rakuten_api":
-        candidates = step1_ranking(rakuten, cfg)
-    else:
-        candidates = step1_web(researcher, cfg["genres"], persona, affiliate_id)
-        if rakuten is not None:
-            candidates = enrich_with_rakuten(rakuten, candidates, cfg["min_affiliate_rate"])
-    step2_threads_check(threads, candidates, cfg)
-    return step3_pick(candidates, cfg)
+def is_ready(p: dict, cfg: dict) -> bool:
+    """下書きを作ってよい商品か（毎回その場で判定するので、確認を書き込めばすぐ反映される）."""
+    return not p.get("skip") and not todo_for(p, cfg)
+
+
+def merge_previous(picked: list[dict], previous: list[dict]) -> None:
+    """前回あなたが確認・記入した内容（料率、リンク、Threadsの確認、skip）を引き継ぐ."""
+    old = {(p.get("item_code") or p["name"]): p for p in previous}
+    for p in picked:
+        prev = old.get(p.get("item_code") or p["name"])
+        if not prev:
+            continue
+        for key in ("affiliate_rate", "affiliate_url", "threads_check"):
+            if prev.get(key) and not p.get(key):
+                p[key] = prev[key]
+        if prev.get("threads_check") == "confirmed":
+            p["threads_check"] = "confirmed"
+        if prev.get("skip"):
+            p["skip"] = True
+
+
+def import_candidates(data: dict, cfg: dict, affiliate_id: str = "", rakuten=None, threads=None,
+                      previous: list[dict] | None = None) -> list[dict]:
+    products = products_from_candidates(data["candidates"], data.get("genre", ""), affiliate_id)
+    if rakuten is not None:
+        products = enrich_with_rakuten(rakuten, products, cfg["min_affiliate_rate"])
+    step2_threads_check(threads, products, cfg)
+    picked = step3_pick(products, cfg)
+    if previous:
+        merge_previous(picked, previous)
+        for p in picked:
+            p["todo"] = todo_for(p, cfg)
+    return picked

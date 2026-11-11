@@ -9,31 +9,27 @@ from __future__ import annotations
 import datetime as dt
 import uuid
 
-from .generator import NOTE_SLOT
+from .drafting import NOTE_SLOT
 
 
-def make_entries(result: dict, product: dict, kind: str, sale: str | None = None,
-                 source_post_id: str | None = None) -> list[dict]:
-    now = dt.datetime.now().isoformat(timespec="seconds")
-    entries = []
-    for d in result["drafts"]:
-        entries.append({
-            "id": uuid.uuid4().hex[:8],
-            "status": "draft",
-            "kind": kind,
-            "item_code": product.get("item_code"),
-            "product_key": product.get("item_code") or product.get("name"),
-            "product_name": product.get("name"),
-            "affiliate_url": product.get("affiliate_url"),
-            "template": d["template"],
-            "text": d["text"],
-            "personal_note": "",
-            "personal_note_hint": d["personal_note_hint"],
-            "sale": sale,
-            "source_post_id": source_post_id,
-            "created_at": now,
-        })
-    return entries
+def make_entry(d: dict, product: dict, kind: str, sale: str | None = None,
+               source_post_id: str | None = None) -> dict:
+    return {
+        "id": uuid.uuid4().hex[:8],
+        "status": "draft",
+        "kind": kind,
+        "item_code": product.get("item_code"),
+        "product_key": product.get("item_code") or product.get("name"),
+        "product_name": product.get("name"),
+        "affiliate_url": product.get("affiliate_url"),
+        "template": d["template"],
+        "text": d["text"],
+        "personal_note": "",
+        "personal_note_hint": d["personal_note_hint"],
+        "sale": sale,
+        "source_post_id": source_post_id,
+        "created_at": dt.datetime.now().isoformat(timespec="seconds"),
+    }
 
 
 def compose(entry: dict, posting: dict) -> tuple[str, str | None]:
