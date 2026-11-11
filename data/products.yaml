@@ -1,1 +1,149 @@
-[]
+- item_code: nanohanadrg:4901301379924
+  name: キュレル ディープモイスチャースプレー 250g
+  genre: 美容・コスメ・香水
+  price: ''
+  rakuten_url: https://item.rakuten.co.jp/nanohanadrg/4901301379924/
+  affiliate_url: ''
+  affiliate_rate: null
+  threads_query: キュレル ミスト
+  why_selling: 顔にも体にも、スプレーするだけで保湿できる。LIPSのミスト状化粧水部門で1位を何度も取り、殿堂入りしている
+  target_worries:
+  - スキンケアの時間がとれない
+  - 乾燥・肌荒れ
+  - 全身の保湿が面倒
+  media_count: 3
+  demand_score: 5
+  sources:
+  - media: LIPS スキンケアランキング
+    url: https://lipscosme.com/rankings/130
+    note: 10位、4.44・クチコミ3,612件（集計 2026/08/11〜11/11）
+  - media: LIPS 商品ページ
+    url: https://lipscosme.com/products/392738
+    note: ベストコスメ2024殿堂入り。口コミ「余裕がない日はこれで全身保湿」
+  - media: 楽天市場 商品ページ
+    url: https://item.rakuten.co.jp/nanohanadrg/4901301379924/
+    note: 複数のドラッグストアが出品
+  threads_search_url: https://www.threads.com/search?q=%E3%82%AD%E3%83%A5%E3%83%AC%E3%83%AB%20%E3%83%9F%E3%82%B9%E3%83%88&serp_type=default
+  threads_check: manual
+  selected_at: '2026-11-11'
+  todo:
+  - 'Threadsで検索し、いいね100以上の投稿が10個以上あれば threads_check を confirmed にする（なければ skip: true）→ https://www.threads.com/search?q=%E3%82%AD%E3%83%A5%E3%83%AC%E3%83%AB%20%E3%83%9F%E3%82%B9%E3%83%88&serp_type=default'
+  - 楽天アフィリエイトでリンクを作るときに、料率が10%以上か確認し、affiliate_rate に書く
+  - 楽天アフィリエイトで作ったリンクを affiliate_url に貼る
+- item_code: rakuten24:4901301464057
+  name: ビオレ おうちdeエステ ディープクレイ洗顔 180g
+  genre: 美容・コスメ・香水
+  price: ''
+  rakuten_url: https://item.rakuten.co.jp/rakuten24/4901301464057/
+  affiliate_url: ''
+  affiliate_rate: null
+  threads_query: ビオレ クレイ洗顔
+  why_selling: 泡立てずにそのまま洗えて、毛穴の黒ずみもすっきりする。2026年上半期の新作で、洗顔料部門1位
+  target_worries:
+  - 毛穴の黒ずみ・角栓
+  - 泡立てる時間がない
+  media_count: 2
+  demand_score: 4
+  sources:
+  - media: LIPS スキンケアランキング
+    url: https://lipscosme.com/rankings/130
+    note: 6位、1,215円、4.13・831件
+  - media: LIPS 商品ページ
+    url: https://lipscosme.com/products/684150
+    note: ベストコスメ2026上半期 洗顔料部門1位、月間トレンド賞 4月・5月1位
+  threads_search_url: https://www.threads.com/search?q=%E3%83%93%E3%82%AA%E3%83%AC%20%E3%82%AF%E3%83%AC%E3%82%A4%E6%B4%97%E9%A1%94&serp_type=default
+  threads_check: manual
+  selected_at: '2026-11-11'
+  todo:
+  - 'Threadsで検索し、いいね100以上の投稿が10個以上あれば threads_check を confirmed にする（なければ skip: true）→ https://www.threads.com/search?q=%E3%83%93%E3%82%AA%E3%83%AC%20%E3%82%AF%E3%83%AC%E3%82%A4%E6%B4%97%E9%A1%94&serp_type=default'
+  - 楽天アフィリエイトでリンクを作るときに、料率が10%以上か確認し、affiliate_rate に書く
+  - 楽天アフィリエイトで作ったリンクを affiliate_url に貼る
+- item_code: null
+  name: アクアレーベル スペシャルジェルクリーム EX（ゴールデンリペア）
+  genre: 美容・コスメ・香水
+  price: 1,958円（LIPSの参考価格）
+  rakuten_url: ''
+  affiliate_url: ''
+  affiliate_rate: null
+  threads_query: アクアレーベル オールインワン
+  why_selling: 洗顔のあとこれ1つで済むオールインワン。忙しい朝に便利という口コミが多い
+  target_worries:
+  - スキンケアの時間がない
+  - 年齢による乾燥・ハリ不足
+  media_count: 2
+  demand_score: 4
+  sources:
+  - media: LIPS カテゴリ別ランキング
+    url: https://lipscosme.com/rankings
+    note: オールインワン化粧品 1位
+  - media: LIPS / @cosme 口コミ
+    url: https://lipscosme.com/products/704498
+    note: 時短・保湿力の評価が高い（検索要約）
+  threads_search_url: https://www.threads.com/search?q=%E3%82%A2%E3%82%AF%E3%82%A2%E3%83%AC%E3%83%BC%E3%83%99%E3%83%AB%20%E3%82%AA%E3%83%BC%E3%83%AB%E3%82%A4%E3%83%B3%E3%83%AF%E3%83%B3&serp_type=default
+  threads_check: manual
+  selected_at: '2026-11-11'
+  todo:
+  - 'Threadsで検索し、いいね100以上の投稿が10個以上あれば threads_check を confirmed にする（なければ skip: true）→ https://www.threads.com/search?q=%E3%82%A2%E3%82%AF%E3%82%A2%E3%83%AC%E3%83%BC%E3%83%99%E3%83%AB%20%E3%82%AA%E3%83%BC%E3%83%AB%E3%82%A4%E3%83%B3%E3%83%AF%E3%83%B3&serp_type=default'
+  - 楽天アフィリエイトでリンクを作るときに、料率が10%以上か確認し、affiliate_rate に書く
+  - 楽天アフィリエイトで作ったリンクを affiliate_url に貼る
+- item_code: nanohanadrg:4909978204150
+  name: イハダ 薬用バーム 20g
+  genre: 美容・コスメ・香水
+  price: ''
+  rakuten_url: https://item.rakuten.co.jp/nanohanadrg/4909978204150/
+  affiliate_url: ''
+  affiliate_rate: null
+  threads_query: イハダ バーム
+  why_selling: 高精製ワセリン配合の薬用バームで、乾燥やマスクの擦れによる肌荒れを守る。LIPSで口コミ994件
+  target_worries:
+  - 乾燥による肌荒れ
+  - マスクの擦れ
+  - 敏感肌
+  media_count: 2
+  demand_score: 4
+  sources:
+  - media: LIPS カテゴリ別ランキング
+    url: https://lipscosme.com/rankings
+    note: フェイスバーム 3位、1,485円
+  - media: LIPS 口コミ
+    url: https://lipscosme.com/products/308972/review
+    note: 4.3・994件、夜に塗ると朝までしっとり（検索要約）
+  threads_search_url: https://www.threads.com/search?q=%E3%82%A4%E3%83%8F%E3%83%80%20%E3%83%90%E3%83%BC%E3%83%A0&serp_type=default
+  threads_check: manual
+  selected_at: '2026-11-11'
+  todo:
+  - 'Threadsで検索し、いいね100以上の投稿が10個以上あれば threads_check を confirmed にする（なければ skip: true）→ https://www.threads.com/search?q=%E3%82%A4%E3%83%8F%E3%83%80%20%E3%83%90%E3%83%BC%E3%83%A0&serp_type=default'
+  - 楽天アフィリエイトでリンクを作るときに、料率が10%以上か確認し、affiliate_rate に書く
+  - 楽天アフィリエイトで作ったリンクを affiliate_url に貼る
+- item_code: matsukiyo:4987241168507
+  name: 肌ラボ 白潤プレミアム 薬用浸透美白乳液 140mL
+  genre: 美容・コスメ・香水
+  price: ''
+  rakuten_url: https://item.rakuten.co.jp/matsukiyo/4987241168507/
+  affiliate_url: ''
+  affiliate_rate: null
+  threads_query: 白潤プレミアム 乳液
+  why_selling: プチプラなのにしっとりして、シミの予防もできる薬用美白乳液。白潤プレミアムのシリーズはAmazonでも上位の常連
+  target_worries:
+  - シミ・くすみ
+  - 乾燥
+  - スキンケアにお金をかけられない
+  media_count: 3
+  demand_score: 4
+  sources:
+  - media: LIPS カテゴリ別ランキング
+    url: https://lipscosme.com/rankings
+    note: 乳液 2位、1,100円
+  - media: '@cosme'
+    url: https://www.cosme.net/products/10205161/
+    note: 口コミ1,107件（検索要約）
+  - media: ITmedia Fav-Log（Amazon売れ筋）
+    url: https://nlab.itmedia.co.jp/fav/articles/3977970/
+    note: 2026年1〜6月版でシリーズが上位に繰り返し登場（検索要約、記事は開けず）
+  threads_search_url: https://www.threads.com/search?q=%E7%99%BD%E6%BD%A4%E3%83%97%E3%83%AC%E3%83%9F%E3%82%A2%E3%83%A0%20%E4%B9%B3%E6%B6%B2&serp_type=default
+  threads_check: manual
+  selected_at: '2026-11-11'
+  todo:
+  - 'Threadsで検索し、いいね100以上の投稿が10個以上あれば threads_check を confirmed にする（なければ skip: true）→ https://www.threads.com/search?q=%E7%99%BD%E6%BD%A4%E3%83%97%E3%83%AC%E3%83%9F%E3%82%A2%E3%83%A0%20%E4%B9%B3%E6%B6%B2&serp_type=default'
+  - 楽天アフィリエイトでリンクを作るときに、料率が10%以上か確認し、affiliate_rate に書く
+  - 楽天アフィリエイトで作ったリンクを affiliate_url に貼る
