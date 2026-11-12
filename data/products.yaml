@@ -143,3 +143,4 @@
   - 'Threadsで検索し、いいね100以上の投稿が10個以上あれば threads_check を confirmed にする（なければ skip: true）→ https://www.threads.com/search?q=%E7%99%BD%E6%BD%A4%E3%83%97%E3%83%AC%E3%83%9F%E3%82%A2%E3%83%A0%20%E4%B9%B3%E6%B6%B2&serp_type=default'
   - 楽天アフィリエイトでリンクを作るときに、料率が10%以上か確認し、affiliate_rate に書く
   - 楽天アフィリエイトで作ったリンクを affiliate_url に貼る
+  skip: true
