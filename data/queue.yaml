@@ -1,5 +1,5 @@
 - id: 291d06b6
-  status: draft
+  status: rejected
   kind: new
   item_code: rakuten24:4901301464057
   product_key: rakuten24:4901301464057
@@ -33,6 +33,7 @@
   sale: null
   source_post_id: null
   created_at: '2026-11-12T20:44:26'
+  reject_reason: 子どもの話を含むため（投稿者に子どもはいない）
 - id: e4fdce48
   status: exported
   kind: new
@@ -74,7 +75,7 @@
   source_post_id: null
   created_at: '2026-11-12T20:44:26'
 - id: c5a38746
-  status: draft
+  status: rejected
   kind: new
   item_code: rakuten24:4901301464057
   product_key: rakuten24:4901301464057
@@ -109,8 +110,9 @@
   sale: null
   source_post_id: null
   created_at: '2026-11-12T20:44:26'
+  reject_reason: 子どもの話を含むため（投稿者に子どもはいない）
 - id: 6b91cd1c
-  status: draft
+  status: rejected
   kind: new
   item_code: null
   product_key: アクアレーベル スペシャルジェルクリーム EX（ゴールデンリペア）
@@ -148,8 +150,9 @@
   sale: null
   source_post_id: null
   created_at: '2026-11-12T20:44:26'
+  reject_reason: 子どもの話を含むため（投稿者に子どもはいない）
 - id: 3c28914a
-  status: draft
+  status: rejected
   kind: new
   item_code: null
   product_key: アクアレーベル スペシャルジェルクリーム EX（ゴールデンリペア）
@@ -186,8 +189,9 @@
   sale: null
   source_post_id: null
   created_at: '2026-11-12T20:44:26'
+  reject_reason: 子どもの話を含むため（投稿者に子どもはいない）
 - id: 230c3154
-  status: draft
+  status: rejected
   kind: new
   item_code: null
   product_key: アクアレーベル スペシャルジェルクリーム EX（ゴールデンリペア）
@@ -222,3 +226,188 @@
   sale: null
   source_post_id: null
   created_at: '2026-11-12T20:44:26'
+  reject_reason: 子どもの話を含むため（投稿者に子どもはいない）
+- id: '53102698'
+  status: draft
+  kind: new
+  item_code: rakuten24:4901301464057
+  product_key: rakuten24:4901301464057
+  product_name: ビオレ おうちdeエステ ディープクレイ洗顔 180g
+  affiliate_url: https://a.r10.to/hPvOZM
+  template: 生々しい一言
+  text: 'メイクを落としたあと、
+
+    洗面所の鏡で小鼻の黒いポツポツを見てため息。
+
+
+    わかる、って人いると思う。
+
+
+    {体験}
+
+
+    調べてみたら、ビオレのクレイ洗顔は
+
+    泡立てずに、そのまま顔にのせてなじませるタイプ。
+
+
+    仕事でくたくたの夜でも
+
+    これならできそう、と思いました。
+
+
+    リンクはリプ欄に置いておきます'
+  personal_note: ''
+  personal_note_hint: 私も最近、小鼻の毛穴が前より目立つ気がしてた
+  sale: null
+  source_post_id: null
+  created_at: '2026-11-12T23:35:40'
+- id: 5f444a4d
+  status: draft
+  kind: new
+  item_code: rakuten24:4901301464057
+  product_key: rakuten24:4901301464057
+  product_name: ビオレ おうちdeエステ ディープクレイ洗顔 180g
+  affiliate_url: https://a.r10.to/hPvOZM
+  template: 質問フック
+  text: '夜の洗顔、泡立てるのが面倒な人いませんか？
+
+
+    残業して帰って、ごはんを食べて、
+
+    お風呂に入る頃にはもうヘトヘト。
+
+    ネットで泡立てる気力が残ってない。
+
+
+    {体験}
+
+
+    そんな日用に気になっているのが
+
+    ビオレの「おうちdeエステ ディープクレイ洗顔」。
+
+    泡立てずにそのまま使えて、
+
+    毛穴の汚れをすっきり洗う、という洗顔料です。
+
+
+    リンクはリプ欄に置いておきます'
+  personal_note: ''
+  personal_note_hint: 疲れた日は、洗顔フォームを手でちょっと泡立てて終わりにしてる
+  sale: null
+  source_post_id: null
+  created_at: '2026-11-12T23:35:40'
+- id: cd9acbdf
+  status: draft
+  kind: new
+  item_code: null
+  product_key: アクアレーベル スペシャルジェルクリーム EX（ゴールデンリペア）
+  product_name: アクアレーベル スペシャルジェルクリーム EX（ゴールデンリペア）
+  affiliate_url: https://a.r10.to/hPI6ad
+  template: 生々しい一言
+  text: '化粧水、乳液、クリーム…
+
+    朝それを順番に塗る時間なんて、ない。
+
+
+    ギリギリまで寝て、バタバタ支度して、
+
+    気づいたら何も塗らずに家を出てる。
+
+
+    {体験}
+
+
+    それで調べたのが
+
+    アクアレーベルのスペシャルジェルクリーム。
+
+    洗顔のあと、これ1つで済むオールインワンです。
+
+
+    「忙しい朝に助かる」という口コミが多くて
+
+    気になっています。
+
+
+    リンクはリプ欄に置いておきます'
+  personal_note: ''
+  personal_note_hint: 私も朝は日焼け止めだけ塗って出かける日が多い
+  sale: null
+  source_post_id: null
+  created_at: '2026-11-12T23:35:40'
+- id: b6dc6be5
+  status: draft
+  kind: new
+  item_code: null
+  product_key: アクアレーベル スペシャルジェルクリーム EX（ゴールデンリペア）
+  product_name: アクアレーベル スペシャルジェルクリーム EX（ゴールデンリペア）
+  affiliate_url: https://a.r10.to/hPI6ad
+  template: 比較・失敗談
+  text: 'スキンケアをちゃんとしようとして
+
+    3日で挫折してきた私が、次に試したいもの。
+
+
+    挫折した理由は
+
+    ・ステップが多くて、朝は時間が足りない
+
+    ・高い美容液は、もったいなくて使えない
+
+    ・夜は疲れてソファで寝落ちする
+
+
+    {体験}
+
+
+    アクアレーベルのスペシャルジェルクリームは
+
+    これ1つで済むオールインワン。
+
+    LIPSのオールインワン部門で1位でした。
+
+
+    手順が1つだけなら、続けられそうです'
+  personal_note: ''
+  personal_note_hint: ライン使いで揃えたこともあるけど、結局使い切れずに余らせてた
+  sale: null
+  source_post_id: null
+  created_at: '2026-11-12T23:35:40'
+- id: e5958cd8
+  status: draft
+  kind: new
+  item_code: null
+  product_key: アクアレーベル スペシャルジェルクリーム EX（ゴールデンリペア）
+  product_name: アクアレーベル スペシャルジェルクリーム EX（ゴールデンリペア）
+  affiliate_url: https://a.r10.to/hPI6ad
+  template: 質問フック
+  text: 'ソファでうたた寝して、
+
+    朝起きたら顔がカサカサ…な人いませんか？
+
+
+    夜のスキンケアをしようと思っていたのに、
+
+    スマホを見ているうちにそのまま寝てる。
+
+
+    {体験}
+
+
+    そんな日に気になっているのが
+
+    アクアレーベルのスペシャルジェルクリーム。
+
+    洗顔後これ1つでうるおいケアができる
+
+    オールインワンです。
+
+
+    リンクはリプ欄に置いておきます'
+  personal_note: ''
+  personal_note_hint: メイクだけ落として、そのまま寝ちゃう日がけっこうある
+  sale: null
+  source_post_id: null
+  created_at: '2026-11-12T23:35:40'
