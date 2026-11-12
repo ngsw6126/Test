@@ -149,6 +149,8 @@ def todo_for(p: dict, cfg: dict) -> list[str]:
                     f"{cfg['threads_min_hit_posts']}個以上あれば threads_check を confirmed にする"
                     f"（なければ skip: true）→ {p.get('threads_search_url')}")
     rate = p.get("affiliate_rate")
+    if not cfg.get("min_affiliate_rate"):
+        rate = 0.0  # 料率の下限なし（0）なら、料率は確認しない
     if rate is not None and float(rate) < cfg["min_affiliate_rate"]:
         todo.append(f"料率が{cfg['min_affiliate_rate']:g}%未満です。skip: true にしてください")
     if rate is None:

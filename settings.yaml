@@ -15,7 +15,7 @@ research:
       name: 美容・コスメ・香水
   ranking_top_n: 30          # ランキング1〜30位をチェック
   candidates_per_genre: 15   # ネットで集める候補の数
-  min_affiliate_rate: 10.0   # 料率10%以上
+  min_affiliate_rate: 0      # 料率の下限（0 = 料率は気にしない。10.0 なら10%以上だけ）
   threads_min_likes: 100     # 「いいね100以上」の投稿が
   threads_min_hit_posts: 10  # 10個以上あるか
   pick_count: 5              # 5商品に絞る
