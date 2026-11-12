@@ -35,7 +35,7 @@
   genre: 美容・コスメ・香水
   price: ''
   rakuten_url: https://item.rakuten.co.jp/rakuten24/4901301464057/
-  affiliate_url: ''
+  affiliate_url: https://a.r10.to/hPvOZM
   affiliate_rate: null
   threads_query: ビオレ クレイ洗顔
   why_selling: 泡立てずにそのまま洗えて、毛穴の黒ずみもすっきりする。2026年上半期の新作で、洗顔料部門1位
@@ -52,12 +52,9 @@
     url: https://lipscosme.com/products/684150
     note: ベストコスメ2026上半期 洗顔料部門1位、月間トレンド賞 4月・5月1位
   threads_search_url: https://www.threads.com/search?q=%E3%83%93%E3%82%AA%E3%83%AC%20%E3%82%AF%E3%83%AC%E3%82%A4%E6%B4%97%E9%A1%94&serp_type=default
-  threads_check: manual
+  threads_check: confirmed
   selected_at: '2026-11-11'
-  todo:
-  - 'Threadsで検索し、いいね100以上の投稿が10個以上あれば threads_check を confirmed にする（なければ skip: true）→ https://www.threads.com/search?q=%E3%83%93%E3%82%AA%E3%83%AC%20%E3%82%AF%E3%83%AC%E3%82%A4%E6%B4%97%E9%A1%94&serp_type=default'
-  - 楽天アフィリエイトでリンクを作るときに、料率が10%以上か確認し、affiliate_rate に書く
-  - 楽天アフィリエイトで作ったリンクを affiliate_url に貼る
+  todo: []
 - item_code: null
   name: アクアレーベル スペシャルジェルクリーム EX（ゴールデンリペア）
   genre: 美容・コスメ・香水
