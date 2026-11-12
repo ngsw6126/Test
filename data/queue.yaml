@@ -34,7 +34,7 @@
   source_post_id: null
   created_at: '2026-11-12T20:44:26'
 - id: e4fdce48
-  status: draft
+  status: exported
   kind: new
   item_code: rakuten24:4901301464057
   product_key: rakuten24:4901301464057
@@ -68,7 +68,7 @@
 
 
     これなら続けられるかも、の一品です'
-  personal_note: ''
+  personal_note: 毛穴パックも結局続かないんだよね👃
   personal_note_hint: 毛穴パックを買っても、結局2回くらいで使わなくなってた
   sale: null
   source_post_id: null
