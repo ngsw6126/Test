@@ -30,6 +30,7 @@
   - 'Threadsで検索し、いいね100以上の投稿が10個以上あれば threads_check を confirmed にする（なければ skip: true）→ https://www.threads.com/search?q=%E3%82%AD%E3%83%A5%E3%83%AC%E3%83%AB%20%E3%83%9F%E3%82%B9%E3%83%88&serp_type=default'
   - 楽天アフィリエイトでリンクを作るときに、料率が10%以上か確認し、affiliate_rate に書く
   - 楽天アフィリエイトで作ったリンクを affiliate_url に貼る
+  skip: true
 - item_code: rakuten24:4901301464057
   name: ビオレ おうちdeエステ ディープクレイ洗顔 180g
   genre: 美容・コスメ・香水
