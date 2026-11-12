@@ -61,7 +61,7 @@
   genre: 美容・コスメ・香水
   price: 1,958円（LIPSの参考価格）
   rakuten_url: ''
-  affiliate_url: ''
+  affiliate_url: https://a.r10.to/hPI6ad
   affiliate_rate: null
   threads_query: アクアレーベル オールインワン
   why_selling: 洗顔のあとこれ1つで済むオールインワン。忙しい朝に便利という口コミが多い
@@ -78,12 +78,9 @@
     url: https://lipscosme.com/products/704498
     note: 時短・保湿力の評価が高い（検索要約）
   threads_search_url: https://www.threads.com/search?q=%E3%82%A2%E3%82%AF%E3%82%A2%E3%83%AC%E3%83%BC%E3%83%99%E3%83%AB%20%E3%82%AA%E3%83%BC%E3%83%AB%E3%82%A4%E3%83%B3%E3%83%AF%E3%83%B3&serp_type=default
-  threads_check: manual
+  threads_check: confirmed
   selected_at: '2026-11-11'
-  todo:
-  - 'Threadsで検索し、いいね100以上の投稿が10個以上あれば threads_check を confirmed にする（なければ skip: true）→ https://www.threads.com/search?q=%E3%82%A2%E3%82%AF%E3%82%A2%E3%83%AC%E3%83%BC%E3%83%99%E3%83%AB%20%E3%82%AA%E3%83%BC%E3%83%AB%E3%82%A4%E3%83%B3%E3%83%AF%E3%83%B3&serp_type=default'
-  - 楽天アフィリエイトでリンクを作るときに、料率が10%以上か確認し、affiliate_rate に書く
-  - 楽天アフィリエイトで作ったリンクを affiliate_url に貼る
+  todo: []
 - item_code: nanohanadrg:4909978204150
   name: イハダ 薬用バーム 20g
   genre: 美容・コスメ・香水
